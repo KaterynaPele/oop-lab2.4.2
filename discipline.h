@@ -3,41 +3,49 @@
 #include <string>
 using namespace std;
 
-enum Type { NORM, UNI_SELECT, FREE_SELECT };
-enum Control { EXAM, TEST };
+enum DisciplineType {
+    NORMATIVE,
+    UNIVERSITY_CHOICE,
+    STUDENT_CHOICE
+};
+
+enum ControlType {
+    EXAM,
+    CREDIT
+};
 
 class Discipline {
+private:
     int id;
-    Type type;
     string name;
+    DisciplineType type;
     int semester;
-    Control control;
+    ControlType control;
     int totalHours;
-    int lec, prac;
+    int lectureHours;
+    int practiceHours;
+    bool hasCoursework;
 
 public:
     Discipline();
-    Discipline(int, Type, string, int, Control, int, int, int);
-    Discipline(const Discipline&);
+    Discipline(int id, string name, DisciplineType type, int semester,
+        ControlType control, int total, int lec, int prac, bool course);
+    Discipline(const Discipline& other);
 
-    // getters
-    int getSemester() const;
-    Type getType() const;
-    Control getControl() const;
+    // getters/setters
+    int getId() const;
     string getName() const;
-    int getTotal() const;
-    int getAuditory() const;
-    int getSelf() const;
+    int getSemester() const;
+    DisciplineType getType() const;
+    ControlType getControl() const;
+    bool hasCourse() const { return hasCoursework; }
 
-    // setters
-    void setSemester(int);
-    void setName(string);
+    int selfStudyHours() const;
 
-    // operators
-    bool operator==(const Discipline&) const;
-    Discipline& operator=(const Discipline&);
+    string toString() const;
 
-    operator string() const;
-    friend ostream& operator<<(ostream&, const Discipline&);
-    friend istream& operator>>(istream&, Discipline&);
+    friend ostream& operator<<(ostream& out, const Discipline& d);
+    friend istream& operator>>(istream& in, Discipline& d);
+
+    bool operator==(const Discipline& other) const;
 };

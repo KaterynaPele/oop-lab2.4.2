@@ -1,80 +1,106 @@
-﻿#include "planeducation.h"
+﻿#include "PlanEducation.h"
 
-PlanEducation::PlanEducation() : standardHours(0), count(0) {}
-PlanEducation::PlanEducation(string c, string n, string d, int h)
-    : code(c), name(n), date(d), standardHours(h), count(0) {}
+PlanEducation::PlanEducation() : totalHours(0), size(MAX_SIZE), count(0) {}
 
-void PlanEducation::Add(PlanElement p) { arr[count++] = p; }
-void PlanEducation::Remove(int idx) { for (int i = idx; i < count - 1; i++) arr[i] = arr[i + 1]; count--; }
+PlanEducation::PlanEducation(string code, string name, string date, int total)
+{
+    this->code = code;
+    this->name = name;
+    this->date = date;
+    this->totalHours = total;
+    size = MAX_SIZE;
+    count = 0;
+}
 
-void PlanEducation::findBySemester(int s) { for (int i = 0; i < count; i++) if (arr[i].d.getSemester() == s) cout << arr[i].d << endl; }
-void PlanEducation::findByType(Type t) { for (int i = 0; i < count; i++) if (arr[i].d.getType() == t) cout << arr[i].d << endl; }
-void PlanEducation::findByControl(Control c) { for (int i = 0; i < count; i++) if (arr[i].d.getControl() == c) cout << arr[i].d << endl; }
+PlanEducation::PlanEducation(const PlanEducation& other) {
+    *this = other;
+}
 
-int PlanEducation::totalHours() { int sum = 0; for (int i = 0; i < count; i++) sum += arr[i].d.getTotal(); return sum; }
+void PlanEducation::addDiscipline(const Discipline& d) {
+    if (count >= size) return;
 
-void PlanEducation::examsTestsPerSemester(int sem) {
-    int ex = 0, t = 0;
+    for (int i = 0; i < count; i++)
+        if (disciplines[i] == d) return;
+
+    disciplines[count++] = d;
+}
+
+void PlanEducation::removeDiscipline(int id) {
     for (int i = 0; i < count; i++) {
-        if (arr[i].d.getSemester() == sem) {
-            if (arr[i].d.getControl() == EXAM) ex++; else t++;
+        if (disciplines[i].getId() == id) {
+            disciplines[i] = disciplines[count - 1];
+            count--;
+            return;
         }
     }
-    cout << "Exams: " << ex << " Tests: " << t << endl;
 }
 
-// Множини
-PlanEducation operator+(PlanEducation& a, PlanEducation& b) {
-    PlanEducation r = a;
-    for (int i = 0; i < b.count; i++) {
+int PlanEducation::getTotalHours() const {
+    int sum = 0;
+    for (int i = 0; i < count; i++)
+        sum += disciplines[i].selfStudyHours();
+    return sum;
+}
+
+// UNION
+PlanEducation PlanEducation::operator+(const PlanEducation& other) const {
+    PlanEducation result = *this;
+    for (int i = 0; i < other.count; i++)
+        result.addDiscipline(other.disciplines[i]);
+    return result;
+}
+
+// DIFFERENCE
+PlanEducation PlanEducation::operator-(const PlanEducation& other) const {
+    PlanEducation result;
+    for (int i = 0; i < count; i++) {
         bool found = false;
-        for (int j = 0; j < a.count; j++) if (b.arr[i] == a.arr[j]) found = true;
-        if (!found) r.Add(b.arr[i]);
+        for (int j = 0; j < other.count; j++)
+            if (disciplines[i] == other.disciplines[j])
+                found = true;
+
+        if (!found)
+            result.addDiscipline(disciplines[i]);
     }
-    return r;
+    return result;
 }
 
-PlanEducation operator*(PlanEducation& a, PlanEducation& b) {
-    PlanEducation r;
-    for (int i = 0; i < a.count; i++)
-        for (int j = 0; j < b.count; j++)
-            if (a.arr[i] == b.arr[j]) r.Add(a.arr[i]);
-    return r;
-}
-
-PlanEducation operator-(PlanEducation& a, PlanEducation& b) {
-    PlanEducation r;
-    for (int i = 0; i < a.count; i++) {
-        bool found = false;
-        for (int j = 0; j < b.count; j++) if (a.arr[i] == b.arr[j]) found = true;
-        if (!found) r.Add(a.arr[i]);
+// INTERSECTION
+PlanEducation PlanEducation::operator*(const PlanEducation& other) const {
+    PlanEducation result;
+    for (int i = 0; i < count; i++) {
+        for (int j = 0; j < other.count; j++) {
+            if (disciplines[i] == other.disciplines[j])
+                result.addDiscipline(disciplines[i]);
+        }
     }
-    return r;
+    return result;
 }
 
-// Генерація групи
-PlanElement* PlanEducation::makeGroupBySemester(int& outCount, int sem) {
-    static PlanElement group[MAX]; outCount = 0;
-    for (int i = 0; i < count; i++) if (arr[i].d.getSemester() == sem) group[outCount++] = arr[i];
-    return group;
-}
-PlanElement* PlanEducation::makeGroupByType(int& outCount, Type t) {
-    static PlanElement group[MAX]; outCount = 0;
-    for (int i = 0; i < count; i++) if (arr[i].d.getType() == t) group[outCount++] = arr[i];
-    return group;
-}
-PlanElement* PlanEducation::makeGroupByControl(int& outCount, Control c) {
-    static PlanElement group[MAX]; outCount = 0;
-    for (int i = 0; i < count; i++) if (arr[i].d.getControl() == c) group[outCount++] = arr[i];
-    return group;
-}
-PlanElement* PlanEducation::makeGroupByCourse(int& outCount, bool cw) {
-    static PlanElement group[MAX]; outCount = 0;
-    for (int i = 0; i < count; i++) if (arr[i].courseWork == cw) group[outCount++] = arr[i];
-    return group;
+Discipline& PlanEducation::operator[](int index) {
+    return disciplines[index];
 }
 
 ostream& operator<<(ostream& out, const PlanEducation& p) {
-    for (int i = 0; i < p.count; i++) out << p.arr[i].d << endl;
+    for (int i = 0; i < p.count; i++)
+        out << p.disciplines[i] << endl;
     return out;
+}
+
+Group PlanEducation::makeGroupBySemester(int semester) const {
+    Group g;
+    g.filterBySemester(disciplines, count, semester);
+    return g;
+}
+
+Group PlanEducation::makeGroupByType(DisciplineType type) const {
+    Group g;
+    g.filterByType(disciplines, count, type);
+    return g;
+}
+
+Group PlanEducation::makeGroupByControl(ControlType control) const {
+    Group g;
+    g.filterByControl(disciplines, count, control);
+    return g;
 }

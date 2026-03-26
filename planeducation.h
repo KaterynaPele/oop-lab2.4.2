@@ -1,49 +1,39 @@
 ﻿#pragma once
-#include "discipline.h"
-#include <iostream>
-using namespace std;
+#include "Discipline.h"
+#include "Group.h"
 
-struct PlanElement {
-    Discipline d;
-    bool courseWork;
-    int selfHours;
-    PlanElement() : courseWork(false), selfHours(0) {}
-    PlanElement(Discipline dd, bool cw) : d(dd), courseWork(cw), selfHours(dd.getSelf()) {}
-    bool operator==(const PlanElement& p) { return d == p.d; }
-};
-
-#define MAX 100
+const int MAX_SIZE = 100;
 
 class PlanEducation {
-    string code, name, date;
-    int standardHours;
-    PlanElement arr[MAX];
+private:
+    string code;
+    string name;
+    string date;
+    int totalHours;
+
+    Discipline disciplines[MAX_SIZE];
+    int size;
     int count;
 
 public:
     PlanEducation();
-    PlanEducation(string, string, string, int);
+    PlanEducation(string code, string name, string date, int total);
+    PlanEducation(const PlanEducation& other);
 
-    void Add(PlanElement);
-    void Remove(int);
+    void addDiscipline(const Discipline& d);
+    void removeDiscipline(int id);
 
-    void findBySemester(int);
-    void findByType(Type);
-    void findByControl(Control);
+    int getTotalHours() const;
 
-    int totalHours();
-    void examsTestsPerSemester(int sem);
+    PlanEducation operator+(const PlanEducation& other) const;
+    PlanEducation operator-(const PlanEducation& other) const;
+    PlanEducation operator*(const PlanEducation& other) const;
 
-    // Множини
-    friend PlanEducation operator+(PlanEducation&, PlanEducation&);
-    friend PlanEducation operator-(PlanEducation&, PlanEducation&);
-    friend PlanEducation operator*(PlanEducation&, PlanEducation&);
+    Discipline& operator[](int index);
 
-    // Генерація групи
-    PlanElement* makeGroupBySemester(int&, int);
-    PlanElement* makeGroupByType(int&, Type);
-    PlanElement* makeGroupByControl(int&, Control);
-    PlanElement* makeGroupByCourse(int&, bool);
+    Group makeGroupBySemester(int semester) const;
+    Group makeGroupByType(DisciplineType type) const;
+    Group makeGroupByControl(ControlType control) const;
 
-    friend ostream& operator<<(ostream&, const PlanEducation&);
+    friend ostream& operator<<(ostream& out, const PlanEducation& p);
 };

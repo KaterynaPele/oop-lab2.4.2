@@ -1,49 +1,58 @@
-#include "discipline.h"
-#include <sstream>
+#include "Discipline.h"
 
-Discipline::Discipline() : id(0), semester(1), totalHours(0), lec(0), prac(0), type(NORM), control(EXAM) {}
-Discipline::Discipline(int i, Type t, string n, int s, Control c, int th, int l, int p)
-    : id(i), type(t), name(n), semester(s), control(c), totalHours(th), lec(l), prac(p) {}
-Discipline::Discipline(const Discipline& d) { *this = d; }
+Discipline::Discipline() :
+    id(0),
+    name(""),
+    type(NORMATIVE),
+    semester(1),
+    control(EXAM),
+    totalHours(0),
+    lectureHours(0),
+    practiceHours(0),
+    hasCoursework(false) {}
 
-int Discipline::getSemester() const { return semester; }
-Type Discipline::getType() const { return type; }
-Control Discipline::getControl() const { return control; }
-string Discipline::getName() const { return name; }
-int Discipline::getTotal() const { return totalHours; }
-int Discipline::getAuditory() const { return lec + prac; }
-int Discipline::getSelf() const { return totalHours - (lec + prac); }
-
-void Discipline::setSemester(int s) { if (s > 0) semester = s; }
-void Discipline::setName(string n) { if (!n.empty()) name = n; }
-
-bool Discipline::operator==(const Discipline& d) const { return name == d.name && semester == d.semester; }
-Discipline& Discipline::operator=(const Discipline& d) {
-    id = d.id; type = d.type; name = d.name; semester = d.semester;
-    control = d.control; totalHours = d.totalHours; lec = d.lec; prac = d.prac;
-    return *this;
+Discipline::Discipline(int id, string name, DisciplineType type, int semester,
+    ControlType control, int total, int lec, int prac, bool course)
+{
+    this->id = id;
+    this->name = name;
+    this->type = type;
+    this->semester = semester;
+    this->control = control;
+    this->totalHours = total;
+    this->lectureHours = lec;
+    this->practiceHours = prac;
+    this->hasCoursework = course;
 }
 
-Discipline::operator string() const {
-    stringstream ss;
-    ss << name << " | sem: " << semester << " | hours: " << totalHours;
-    return ss.str();
+Discipline::Discipline(const Discipline& other) {
+    *this = other;
+}
+
+int Discipline::getId() const { return id; }
+string Discipline::getName() const { return name; }
+int Discipline::getSemester() const { return semester; }
+DisciplineType Discipline::getType() const { return type; }
+ControlType Discipline::getControl() const { return control; }
+
+int Discipline::selfStudyHours() const {
+    return totalHours - (lectureHours + practiceHours);
+}
+
+string Discipline::toString() const {
+    return name + " (semester " + to_string(semester) + ")";
 }
 
 ostream& operator<<(ostream& out, const Discipline& d) {
-    out << string(d); return out;
+    out << d.toString();
+    return out;
 }
 
 istream& operator>>(istream& in, Discipline& d) {
-    cout << "Name: "; in >> d.name;
-    cout << "Semester: "; in >> d.semester;
-    cout << "Total hours: "; in >> d.totalHours;
-    cout << "Lectures: "; in >> d.lec;
-    cout << "Practice: "; in >> d.prac;
-    int t, c;
-    cout << "Type (0=NORM,1=UNI_SELECT,2=FREE_SELECT): "; in >> t;
-    d.type = static_cast<Type>(t);
-    cout << "Control (0=EXAM,1=TEST): "; in >> c;
-    d.control = static_cast<Control>(c);
+    in >> d.id >> d.name >> d.semester;
     return in;
+}
+
+bool Discipline::operator==(const Discipline& other) const {
+    return id == other.id;
 }
